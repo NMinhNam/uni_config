@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, render_template
 from app.models.invoice_model import InvoiceModel
+from app.controllers.auth_controller import login_required
 import os
 import re
 import traceback
@@ -18,12 +19,14 @@ def get_invoice_model():
     return invoice_model_instance
 
 @invoice_bp.route('/download-invoices')
-def render_download_invoices():  # Tên hàm khác với download_invoices
+@login_required
+def render_download_invoices():
     invoice_model = get_invoice_model()
     invoice_model.close_driver()
     return render_template('download_invoices.html')
 
 @invoice_bp.route('/api/get-captcha', methods=['GET'])
+@login_required
 def get_captcha():
     try:
         invoice_model = get_invoice_model()
@@ -35,6 +38,7 @@ def get_captcha():
         return jsonify({'status': 'error', 'message': f'Lỗi khi tải CAPTCHA: {str(e)}', 'new_captcha_url': None}), 400
 
 @invoice_bp.route('/api/download-invoices', methods=['POST'])
+@login_required
 def download_invoices():
     invoice_model = get_invoice_model()
     try:
