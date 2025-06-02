@@ -5,6 +5,7 @@ from app.controllers.invoice_controller import invoice_bp
 import os
 from functools import wraps
 from config import Config
+from datetime import timedelta
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
@@ -13,7 +14,16 @@ STATIC_DIR = os.path.join(BASE_DIR, 'app', 'static')
 app = Flask(__name__, 
             template_folder=TEMPLATE_DIR,
             static_folder=STATIC_DIR)
-app.secret_key = os.urandom(24)  
+
+# Cấu hình session
+app.secret_key = os.urandom(24)
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=1)
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_REFRESH_EACH_REQUEST'] = True
+app.config['SESSION_TYPE'] = 'filesystem'
+
 CORS(app)
 app.config.from_object(Config)
 

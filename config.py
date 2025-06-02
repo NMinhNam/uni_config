@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 class Config:
     # Cấu hình cơ bản
@@ -23,4 +24,8 @@ class Config:
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
-    PERMANENT_SESSION_LIFETIME = 1800  # 30 phút
+    PERMANENT_SESSION_LIFETIME = timedelta(minutes=1)  # 1 phút
+    SESSION_REFRESH_EACH_REQUEST = True  # Refresh session mỗi request
+
+    # Cấu hình thêm (nếu cần)
+    # ADDITIONAL_CONFIG_KEY = 'additional_value' 

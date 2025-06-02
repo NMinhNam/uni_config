@@ -14,6 +14,7 @@
 !static/
 !static/**/*
 !app/
+!app/services/
 
 # Ngoại trừ các tệp cấu hình quan trọng
 !.gitignore
