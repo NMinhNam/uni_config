@@ -1,39 +1,30 @@
 # Bỏ qua tất cả
 *
 
-# Ngoại trừ các tệp .py, .html, .css, .js
+# Cho phép các loại tệp
 !*.py
 !*.html
 !*.css
 !*.js
 
-# Cho phép các thư mục chứa file
+# Cho phép các thư mục chứa tệp
 !app/
-!app/controllers/
-!app/models/
-!app/services/
+!app/**/
 !templates/
 !static/
 !static/css/
 !static/js/
-
-# Cho phép tất cả trong static
 !static/**
 
-# Không bỏ qua các tệp cấu hình quan trọng
+# Cho phép file cấu hình
 !.gitignore
 !requirements.txt
 
-# Bỏ qua các thư mục đóng gói, dữ liệu, cache
-build/
-dist/
-app.spec
-Data_Export/
-DOWNLOAD/
-uploads/
-__pycache__/
-
-# Bỏ qua file tạm
+# Bỏ qua những thứ không cần
 *.log
 *.tmp
 .env
+__pycache__/
+build/
+dist/
+uploads/

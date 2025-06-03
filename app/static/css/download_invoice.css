@@ -1,0 +1,164 @@
+body {
+    background: linear-gradient(135deg, #e0eafc, #cfdef3);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+  }
+
+  .form-container {
+    background: #ffffff;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    max-width: 600px;
+    width: 100%;
+    margin: 2rem auto;
+    border: 1px solid #e9ecef;
+  }
+
+  .form-container h2 {
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-weight: 700;
+    font-size: 1.8rem;
+    letter-spacing: 0.5px;
+  }
+
+  .form-label {
+    font-weight: 500;
+    color: #34495e;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+  }
+
+  .form-control,
+  .form-select {
+    border-radius: 10px;
+    border: 1px solid #ced4da;
+    padding: 0.8rem;
+    font-size: 1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    border-color: #0066cc;
+    box-shadow: 0 0 8px rgba(0, 102, 204, 0.4);
+    transform: scale(1.01);
+    outline: none;
+  }
+
+  .btn-primary {
+    background: linear-gradient(90deg, #0066cc, #0055b3);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(90deg, #0055b3, #003d82);
+    transform: translateY(-2px);
+  }
+
+  .btn-danger {
+    background: linear-gradient(90deg, #e74c3c, #c0392b);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+
+  .btn-danger:hover {
+    background: linear-gradient(90deg, #c0392b, #a12e2b);
+    transform: translateY(-2px);
+  }
+
+  .button-group {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+
+  #result {
+    display: none;
+    margin-top: 2rem;
+  }
+
+  #result h4 {
+    color: #2c3e50;
+    font-weight: 600;
+  }
+
+  #result p {
+    color: #34495e;
+  }
+
+  #result ul {
+    list-style-type: disc;
+    padding-left: 20px;
+    color: #7f8c8d;
+  }
+
+  /* Thanh tiến trình trong SweetAlert2 */
+  .swal2-progress-bar-container {
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  .swal2-progress-bar {
+    height: 1rem;
+    border-radius: 5px;
+    overflow: hidden;
+    background: #e9ecef;
+  }
+
+  .swal2-progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #0066cc, #0055b3);
+    transition: width 0.3s ease;
+  }
+
+  @media (max-width: 576px) {
+    .form-container {
+      padding: 1.5rem;
+      margin: 1rem;
+    }
+
+    .form-container h2 {
+      font-size: 1.5rem;
+    }
+
+    .form-control,
+    .form-select {
+      font-size: 0.9rem;
+      padding: 0.6rem;
+    }
+
+    .btn-primary,
+    .btn-danger {
+      padding: 0.6rem 1.2rem;
+      font-size: 0.9rem;
+    }
+
+    .button-group {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    #result {
+      margin-top: 1.5rem;
+    }
+
+    .swal2-progress-bar {
+      height: 0.8rem;
+    }
+  }
