@@ -3,6 +3,7 @@ from flask_cors import CORS
 from app.controllers.auth_controller import auth_bp
 from app.controllers.invoice_controller import invoice_bp
 from app.controllers.dashboard_cd_controller import dashboard_bp
+from app.controllers.check_declaration_controller import check_declaration_bp
 import os
 from functools import wraps
 from config import Config
@@ -18,16 +19,14 @@ app = Flask(__name__,
             static_folder=STATIC_DIR)
 
 # Cấu hình session
-app.secret_key = os.urandom(24)
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
-# app.config['SESSION_COOKIE_SECURE'] = True  # Tạm thời comment dòng này khi chạy local
-app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_REFRESH_EACH_REQUEST'] = True
-# app.config['SESSION_TYPE'] = 'filesystem'  # Bỏ Flask-Session
+app.config['SECRET_KEY'] = 'your-secret-key-here'
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['PERMANENT_SESSION_LIFETIME'] = 1800  # 30 phút
 
-CORS(app)
-app.config.from_object(Config)
+# Cấu hình CORS
+CORS(app, supports_credentials=True)
+
+# app.config.from_object(Config)
 
 # Session(app)  # Bỏ Flask-Session
 
@@ -49,6 +48,7 @@ def login_required(f):
 app.register_blueprint(auth_bp)
 app.register_blueprint(invoice_bp)
 app.register_blueprint(dashboard_bp)  # Đăng ký dashboard blueprint
+app.register_blueprint(check_declaration_bp)  # Đăng ký check declaration blueprint
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,7 +1,6 @@
 from flask import Blueprint, render_template, jsonify, request, Response
 from app.models.dashboard_cd_model import DebitModel
-from office365.runtime.auth.authentication_context import AuthenticationContext
-from office365.sharepoint.client_context import ClientContext
+from app.services.sharepoint_service import SharePointService
 from app.controllers.auth_controller import login_required
 import logging
 import json
@@ -75,11 +74,9 @@ def update_item(item_id):
     try:
         data = request.get_json()
         model = DebitModel()
-
-        auth_context = AuthenticationContext(model.site_url)
-        auth_context.acquire_token_for_user(model.username, model.password)
-        ctx = ClientContext(model.site_url, auth_context)
-        target_list = ctx.web.lists.get_by_title(model.list_name)
+        sharepoint = model.sharepoint
+        ctx = sharepoint.get_context()
+        target_list = sharepoint.get_list_by_key('debit')
 
         # Lấy thông tin về kiểu dữ liệu của list
         ctx.load(target_list)
@@ -164,10 +161,9 @@ def check_updates():
         current_time = time.time()
         
         # Kiểm tra thay đổi từ SharePoint
-        auth_context = AuthenticationContext(model.site_url)
-        auth_context.acquire_token_for_user(model.username, model.password)
-        ctx = ClientContext(model.site_url, auth_context)
-        target_list = ctx.web.lists.get_by_title(model.list_name)
+        sharepoint = model.sharepoint
+        ctx = sharepoint.get_context()
+        target_list = sharepoint.get_list_by_key('debit')
         
         # Lấy thời gian cập nhật cuối cùng của list
         ctx.load(target_list)
@@ -199,10 +195,9 @@ def events():
         global last_update_time
         try:
             # Tạo context và auth một lần duy nhất
-            auth_context = AuthenticationContext(model.site_url)
-            auth_context.acquire_token_for_user(model.username, model.password)
-            ctx = ClientContext(model.site_url, auth_context)
-            target_list = ctx.web.lists.get_by_title(model.list_name)
+            sharepoint = model.sharepoint
+            ctx = sharepoint.get_context()
+            target_list = sharepoint.get_list_by_key('debit')
             
             # Load target list một lần duy nhất
             ctx.load(target_list)
@@ -248,41 +243,24 @@ def events():
                         logger.debug(f"SSE: SharePoint Last Modified DateTime (UTC): {sharepoint_dt}. Server last_update_dt (UTC): {server_last_update_dt}")
 
                         if sharepoint_dt and sharepoint_dt > server_last_update_dt:
-                            logger.info('SSE: Change detected! Sending update event.')
-                            data = {
-                                'type': 'update',
-                                'timestamp': sharepoint_dt.timestamp() # Sử dụng timestamp từ SharePoint datetime
-                            }
-                            yield f"data: {json.dumps(data)}\n\n"
-                            last_update_time = sharepoint_dt.timestamp() # Cập nhật last_update_time bằng timestamp từ SharePoint
-                            logger.info('SSE: last_update_time updated.')
+                            logger.info(f"SSE: Updates detected! SharePoint: {sharepoint_dt}, Server: {server_last_update_dt}")
+                            last_update_time = sharepoint_dt.timestamp()
+                            yield f"data: {json.dumps({'has_updates': True, 'last_update': last_update_time})}\n\n"
                         else:
-                            logger.debug('SSE: No change detected.')
+                            logger.debug('SSE: No updates detected')
+                            yield f"data: {json.dumps({'has_updates': False, 'last_update': last_update_time})}\n\n"
                     
-                    # Gửi comment giữ kết nối mỗi 25 giây
-                    yield ': keep-alive\n\n'
-                    time.sleep(25)  # Đợi 25 giây trước khi kiểm tra lại
-
+                    time.sleep(1)  # Đợi 1 giây trước khi kiểm tra lại
+                    
                 except Exception as e:
-                    # Sử dụng logger.exception để in ra traceback chi tiết
-                    logger.exception(f"SSE: Error in event stream loop:")
-                    # Nếu có lỗi, thử tạo lại context
-                    try:
-                        logger.info('SSE: Attempting to recreate SharePoint context due to error...')
-                        auth_context = AuthenticationContext(model.site_url)
-                        auth_context.acquire_token_for_user(model.username, model.password)
-                        ctx = ClientContext(model.site_url, auth_context)
-                        target_list = ctx.web.lists.get_by_title(model.list_name)
-                        ctx.load(target_list)
-                        ctx.execute_query()
-                        logger.info('SSE: SharePoint context recreated successfully.')
-                    except Exception as auth_error:
-                        logger.error(f"SSE: Error reconnecting to SharePoint: {str(auth_error)}")
-                    time.sleep(5)  # Đợi 5 giây nếu có lỗi
+                    logger.error(f"SSE: Error in update check loop: {str(e)}")
+                    yield f"data: {json.dumps({'error': str(e)})}\n\n"
+                    time.sleep(5)  # Đợi lâu hơn nếu có lỗi
+                    
         except Exception as e:
             logger.error(f"SSE: Error in event stream initialization: {str(e)}")
-            time.sleep(5)  # Đợi 5 giây nếu có lỗi khởi tạo
-
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            
     return Response(event_stream(), mimetype='text/event-stream')
 
 

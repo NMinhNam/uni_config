@@ -17,6 +17,7 @@ class AuthService:
                 session.permanent = True
                 session['user'] = {
                     'username': username,
+                    'password': password,
                     'authenticated': True,
                     'login_time': datetime.now().timestamp()
                 }

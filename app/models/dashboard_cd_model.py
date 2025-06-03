@@ -1,29 +1,19 @@
 # File: models/debit_model.py
 
 import requests
-from office365.runtime.auth.authentication_context import AuthenticationContext
-from office365.sharepoint.client_context import ClientContext
-from office365.sharepoint.lists.list import List
-from office365.runtime.queries.client_query import ClientQuery
 from datetime import datetime
+from app.services.sharepoint_service import SharePointService
 
 class DebitModel:
     def __init__(self):
-        self.site_url = "https://uniconsulting079.sharepoint.com/sites/ClearanceFlowAutomation"
-        self.list_name = "Debit list"
-        self.username = "giangvo@eximuni.com"
-        self.password = "Thiien2004"
+        self.sharepoint = SharePointService(site_key='clearance_flow')
 
     def get_all_items(self):
         try:
-            auth_context = AuthenticationContext(self.site_url)
-            auth_context.acquire_token_for_user(self.username, self.password)
-            ctx = ClientContext(self.site_url, auth_context)
-            target_list = ctx.web.lists.get_by_title(self.list_name)
-            
+            target_list = self.sharepoint.get_list_by_key('debit')
             items = target_list.items.top(5000)  # Get up to 5000 items
-            ctx.load(items)
-            ctx.execute_query()
+            self.sharepoint.get_context().load(items)
+            self.sharepoint.get_context().execute_query()
             
             all_items = []
             for item in items:
@@ -60,14 +50,10 @@ class DebitModel:
 
     def get_debit_list(self, page=1, per_page=10, client_filter=None, from_date=None, to_date=None, import_export_filter=None):
         try:
-            auth_context = AuthenticationContext(self.site_url)
-            auth_context.acquire_token_for_user(self.username, self.password)
-            ctx = ClientContext(self.site_url, auth_context)
-            target_list = ctx.web.lists.get_by_title(self.list_name)
-            
+            target_list = self.sharepoint.get_list_by_key('debit')
             items = target_list.items.top(5000)  # Get up to 5000 items
-            ctx.load(items)
-            ctx.execute_query()
+            self.sharepoint.get_context().load(items)
+            self.sharepoint.get_context().execute_query()
             
             # Chuyển đổi items thành list các dictionary
             all_items = []
