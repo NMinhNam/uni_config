@@ -1,0 +1,184 @@
+body {
+    background-color: #f8f9fa;
+    min-height: 100vh; /* Ensure body takes at least full viewport height */
+    display: flex;
+    align-items: center; /* Center vertically */
+    justify-content: center; /* Center horizontally */
+}
+.login-wrapper {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.1);
+    overflow: hidden;
+    width: 90%;
+    max-width: 1000px; /* Adjust max-width as needed */
+    margin: 50px auto;
+}
+.login-left,
+.login-right {
+    padding: 40px;
+}
+.login-left {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.login-right {
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Add background image here */
+    background-image: url('https://i.ibb.co/C542qtck/21860000-6543418.jpg'); /* Replace with actual image path */
+    background-size: cover;
+    background-position: center;
+    min-height: 400px; /* Ensure minimum height */
+}
+.login-right h3,
+.login-right p {
+    color: #000; /* Change text color to black */
+    text-align: center;
+}
+.login-header h2 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333; /* Dark color for the main heading */
+}
+.login-header p {
+    font-size: 1rem;
+    color: #6c757d; /* Lighter gray color for the subheading */
+}
+.form-label {
+    font-weight: bold;
+    margin-bottom: 5px; /* Space between label and input */
+}
+.form-control {
+    border-radius: 25px; /* Much larger border radius */
+    padding: 12px;
+    font-size: 1rem;
+    margin-bottom: 15px;
+}
+.form-check-label a {
+    text-decoration: none;
+    color: #0078d4; /* SharePoint blue */
+}
+.btn-login {
+    width: 100%;
+    padding: 12px;
+    border-radius: 5px;
+    background-color: #6a11cb; /* Example button color */
+    border: none;
+    font-size: 1.1rem;
+    margin-top: 20px;
+    transition: background-color 0.3s ease;
+}
+.btn-login:hover {
+    background-color: #5a0dab; /* Darker shade on hover */
+}
+.forgot-password {
+    font-size: 0.9rem;
+}
+.signup-link {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 1rem;
+}
+.signup-link a {
+    color: #6a11cb;
+    text-decoration: none;
+    font-weight: bold;
+}
+ /* Adjust padding for smaller screens */
+@media (max-width: 768px) {
+    .login-left, .login-right {
+        padding: 20px;
+    }
+    .login-right {
+        display: none; /* Hide illustration on small screens */
+    }
+}
+
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f5f5f5;
+}
+
+.login-box {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.login-header h1 {
+    color: #333;
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    color: #555;
+    font-size: 0.9rem;
+}
+
+.form-group input {
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+.login-button {
+    background-color: #007bff;
+    color: white;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.login-button:hover {
+    background-color: #0056b3;
+}
+
+.error-message {
+    color: #dc3545;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    display: none;
+}
+
+.error-message.show {
+    display: block;
+}

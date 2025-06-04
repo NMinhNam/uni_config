@@ -2,10 +2,13 @@ from flask import Flask, session, redirect, url_for
 from flask_cors import CORS
 from app.controllers.auth_controller import auth_bp
 from app.controllers.invoice_controller import invoice_bp
+from app.controllers.dashboard_cd_controller import dashboard_bp
+from app.controllers.check_declaration_controller import check_declaration_bp
 import os
 from functools import wraps
 from config import Config
 from datetime import timedelta
+# from flask_session import Session  # Bỏ Flask-Session
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
@@ -16,21 +19,22 @@ app = Flask(__name__,
             static_folder=STATIC_DIR)
 
 # Cấu hình session
-app.secret_key = os.urandom(24)
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=1)
-app.config['SESSION_COOKIE_SECURE'] = True
-app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_REFRESH_EACH_REQUEST'] = True
+app.config['SECRET_KEY'] = 'your-secret-key-here'
 app.config['SESSION_TYPE'] = 'filesystem'
+app.config['PERMANENT_SESSION_LIFETIME'] = 1800  # 30 phút
 
-CORS(app)
-app.config.from_object(Config)
+# Cấu hình CORS
+CORS(app, supports_credentials=True)
+
+# app.config.from_object(Config)
+
+# Session(app)  # Bỏ Flask-Session
 
 @app.route('/')
 def index():
+    print('Session:', dict(session))
     if 'user' in session and session['user'].get('authenticated'):
-        return redirect(url_for('invoice.render_download_invoices'))  # Cập nhật endpoint
+        return redirect(url_for('dashboard.index'))  # Chuyển hướng đến dashboard
     return redirect(url_for('auth.login_page'))
 
 def login_required(f):
@@ -43,6 +47,8 @@ def login_required(f):
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(invoice_bp)
+app.register_blueprint(dashboard_bp)  # Đăng ký dashboard blueprint
+app.register_blueprint(check_declaration_bp)  # Đăng ký check declaration blueprint
 
 if __name__ == '__main__':
     app.run(debug=True)

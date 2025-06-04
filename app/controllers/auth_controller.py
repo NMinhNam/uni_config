@@ -14,10 +14,10 @@ def login_required(f):
     return decorated_function
 
 # Route hiển thị trang đăng nhập
-@auth_bp.route('/login-page', methods=['GET'])
+@auth_bp.route('/login-page')
 def login_page():
-    if auth_service.is_authenticated():
-        return redirect(url_for('invoice.render_download_invoices'))
+    if 'user' in session and session['user'].get('authenticated'):
+        return redirect(url_for('dashboard.index'))  # Chuyển hướng đến dashboard
     return render_template('login.html')
 
 # Route xử lý yêu cầu POST đăng nhập từ form/AJAX
@@ -28,13 +28,16 @@ def login():
     password = data.get('password')
     
     success, message = auth_service.login(username, password)
+    
     if success:
         return jsonify({
-            'success': True, 
-            'message': message,
-            'redirect': url_for('invoice.render_download_invoices')
+            'success': True,
+            'redirect': url_for('dashboard.index')  # Chuyển hướng đến dashboard
         })
-    return jsonify({'success': False, 'message': message}), 401
+    return jsonify({
+        'success': False,
+        'message': message
+    })
 
 @auth_bp.route('/logout')
 def logout():

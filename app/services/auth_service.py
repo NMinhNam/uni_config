@@ -17,6 +17,7 @@ class AuthService:
                 session.permanent = True
                 session['user'] = {
                     'username': username,
+                    'password': password,
                     'authenticated': True,
                     'login_time': datetime.now().timestamp()
                 }
@@ -34,16 +35,4 @@ class AuthService:
     def is_authenticated(self):
         if 'user' not in session or not session['user'].get('authenticated'):
             return False
-            
-        # Kiểm tra thời gian đăng nhập
-        login_time = session['user'].get('login_time')
-        if not login_time:
-            return False
-            
-        # Kiểm tra nếu đã quá 1 phút
-        current_time = datetime.now().timestamp()
-        if current_time - login_time > 60:  # 60 giây = 1 phút
-            session.clear()
-            return False
-            
         return True
