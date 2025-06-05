@@ -58,7 +58,7 @@ class Config:
     DOWNLOAD_ROOT = "DOWNLOAD"
     EXCEL_FILENAME = "Invoice_List.xlsx"
 
-    # Cấu hình database (nếu cần)
+    # Cấu hình database
     # SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///app.db'
     # SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -66,7 +66,7 @@ class Config:
     SESSION_COOKIE_SECURE = False  # Chỉ bật True khi chạy trên HTTPS
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
-    PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
+    PERMANENT_SESSION_LIFETIME = timedelta(minutes=1)
     SESSION_REFRESH_EACH_REQUEST = True  # Refresh session mỗi request
 
     # Cấu hình thêm (nếu cần)
