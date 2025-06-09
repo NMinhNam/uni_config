@@ -186,50 +186,72 @@ class ReportSoaService:
         return ""
 
     def create_word_file(self, data, company_name, company_info, from_date, to_date, save_dir, file_format='docx'):
-        doc = Document()
+        # Tạo tên file tạm thời cho file Word
+        temp_docx = None
+        final_filename = None
         
-        # Tạo header với logo và thông tin công ty
-        self._create_header(doc)
-        
-        # Tạo tiêu đề và thông tin chung
-        self._create_title_section(doc, company_info, from_date, to_date)
-        
-        # Tạo bảng dữ liệu
-        self._create_data_table(doc, data)
-        
-        # Tạo phần footer với thông tin thanh toán
-        self._create_footer(doc)
-        
-        # Lưu file Word
-        base_name = f"{company_name}_report"
-        docx_path = os.path.join(save_dir, f"{base_name}.docx")
-        doc.save(docx_path)
-
-        if file_format == 'pdf':
-            try:
-                # Initialize COM
-                pythoncom.CoInitialize()
+        try:
+            doc = Document()
+            
+            # Tạo header với logo và thông tin công ty
+            self._create_header(doc)
+            
+            # Tạo tiêu đề và thông tin chung
+            self._create_title_section(doc, company_info, from_date, to_date)
+            
+            # Tạo bảng dữ liệu
+            self._create_data_table(doc, data)
+            
+            # Tạo phần footer với thông tin thanh toán
+            self._create_footer(doc)
+            
+            base_name = f"{company_name}_report"
+            
+            if file_format == 'pdf':
+                # Tạo file Word tạm thời với tên ngẫu nhiên
+                import uuid
+                temp_id = str(uuid.uuid4())
+                temp_docx = os.path.join(save_dir, f"temp_{temp_id}.docx")
+                doc.save(temp_docx)
                 
-                # Chuyển đổi sang PDF
-                pdf_path = os.path.join(save_dir, f"{base_name}.pdf")
-                word = win32com.client.Dispatch('Word.Application')
-                doc = word.Documents.Open(os.path.abspath(docx_path))
-                doc.SaveAs(os.path.abspath(pdf_path), FileFormat=17)  # 17 là định dạng PDF
-                doc.Close()
-                word.Quit()
-                
-                # Cleanup
-                pythoncom.CoUninitialize()
-                
-                # Xóa file docx tạm
-                os.remove(docx_path)
-                return f"{base_name}.pdf"
-            except Exception as e:
-                # Nếu có lỗi khi tạo PDF, trả về file Word
-                print(f"Error converting to PDF: {str(e)}")
-                return f"{base_name}.docx"
-        
-        return f"{base_name}.docx"
+                try:
+                    # Initialize COM
+                    pythoncom.CoInitialize()
+                    
+                    # Chuyển đổi sang PDF
+                    final_filename = f"{base_name}.pdf"
+                    pdf_path = os.path.join(save_dir, final_filename)
+                    word = win32com.client.Dispatch('Word.Application')
+                    doc = word.Documents.Open(os.path.abspath(temp_docx))
+                    doc.SaveAs(os.path.abspath(pdf_path), FileFormat=17)  # 17 là định dạng PDF
+                    doc.Close()
+                    word.Quit()
+                    
+                finally:
+                    # Cleanup COM
+                    pythoncom.CoUninitialize()
+                    
+                    # Xóa file Word tạm thời
+                    if temp_docx and os.path.exists(temp_docx):
+                        try:
+                            os.remove(temp_docx)
+                        except Exception as e:
+                            print(f"Warning: Could not delete temporary file {temp_docx}: {str(e)}")
+            else:
+                # Nếu người dùng yêu cầu file Word, lưu trực tiếp
+                final_filename = f"{base_name}.docx"
+                doc.save(os.path.join(save_dir, final_filename))
+            
+            return final_filename
+            
+        except Exception as e:
+            # Đảm bảo xóa file tạm nếu có lỗi
+            if temp_docx and os.path.exists(temp_docx):
+                try:
+                    os.remove(temp_docx)
+                except:
+                    pass
+            raise Exception(f"Error creating document: {str(e)}")
 
     def _create_header(self, doc):
         # Thiết lập độ rộng trang và margin
@@ -400,7 +422,7 @@ class ReportSoaService:
                 cell.paragraphs[0].runs[0].font.size = Pt(11)
                 cell.paragraphs[0].runs[0].font.name = 'Times New Roman'
                 # Căn giữa cho cột SEQ, DATE, CURR
-                if i in [0, 3, 4]:
+                if i in [0, 3, 4,1,2]:
                     cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
                 # Căn phải cho cột DEBIT, CREDIT
                 elif i in [5, 6]:
