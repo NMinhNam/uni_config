@@ -77,7 +77,7 @@ class Config:
     SESSION_COOKIE_SECURE = False  # Chỉ bật True khi chạy trên HTTPS
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
-    PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
+    PERMANENT_SESSION_LIFETIME = timedelta(minutes=60)  # Tăng thời gian session lên 60 phút
     SESSION_REFRESH_EACH_REQUEST = True  # Refresh session mỗi request
 
     # Cấu hình thêm (nếu cần)
