@@ -16,6 +16,13 @@ class Config:
                 'declaration': 'Debit list'
             }
         },
+        'clearance': {
+            'site_url': 'https://uniconsulting079.sharepoint.com/sites/Clearance',
+            'lists': {
+                'freight_bl': 'Freight BL',
+                'debit_credit': 'Debit/Credit Note'
+            }
+        },
         'test_data': {
             'site_url': 'https://uniconsulting079.sharepoint.com/sites/Test_data',
             'lists': {
@@ -24,6 +31,10 @@ class Config:
             }
         }
     }
+
+    # SharePoint Configuration
+    SHAREPOINT_CLIENT_ID = "your_client_id_here"
+    SHAREPOINT_CLIENT_SECRET = "your_client_secret_here"
 
     @staticmethod
     def get_sharepoint_site_url(site_key):
@@ -66,7 +77,7 @@ class Config:
     SESSION_COOKIE_SECURE = False  # Chỉ bật True khi chạy trên HTTPS
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
-    PERMANENT_SESSION_LIFETIME = timedelta(minutes=60)
+    PERMANENT_SESSION_LIFETIME = timedelta(minutes=60)  # Tăng thời gian session lên 60 phút
     SESSION_REFRESH_EACH_REQUEST = True  # Refresh session mỗi request
 
     # Cấu hình thêm (nếu cần)
