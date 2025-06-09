@@ -5,6 +5,7 @@ from app.controllers.invoice_controller import invoice_bp
 from app.controllers.dashboard_cd_controller import dashboard_bp
 from app.controllers.check_declaration_controller import check_declaration_bp
 from app.controllers.split_file_controller import split_bp
+from app.controllers.expense_controller import expense_bp
 import os
 from functools import wraps
 from config import Config
@@ -22,7 +23,7 @@ app = Flask(__name__,
 # Cấu hình session
 app.config['SECRET_KEY'] = 'your-secret-key-here'
 app.config['SESSION_TYPE'] = 'filesystem'
-app.config['PERMANENT_SESSION_LIFETIME'] = 60  # 30 phút
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 30 phút
 
 # Cấu hình CORS
 CORS(app, supports_credentials=True)
@@ -51,6 +52,7 @@ app.register_blueprint(invoice_bp)
 app.register_blueprint(dashboard_bp)  # Đăng ký dashboard blueprint
 app.register_blueprint(check_declaration_bp)  # Đăng ký check declaration blueprint
 app.register_blueprint(split_bp, url_prefix='/split')  # Đăng ký split file blueprint
+app.register_blueprint(expense_bp, url_prefix='/expense')  # Đăng ký expense blueprint
 
 if __name__ == '__main__':
     app.run(debug=True)
