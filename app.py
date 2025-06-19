@@ -8,6 +8,7 @@ from app.controllers.split_file_controller import split_bp
 from app.controllers.expense_controller import expense_bp
 from app.controllers.report_soa_controller import report_soa_bp
 import os
+import secrets
 from functools import wraps
 from config import Config
 from datetime import timedelta, datetime
@@ -21,8 +22,11 @@ app = Flask(__name__,
             template_folder=TEMPLATE_DIR,
             static_folder=STATIC_DIR)
 
+# Tự động tạo SECRET_KEY
+app.config['SECRET_KEY'] = secrets.token_hex(32)
+print(" SECRET_KEY đã được tự động tạo thành công!")
+
 # Cấu hình session
-app.config['SECRET_KEY'] = 'your-secret-key-here'
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=60)  # 60 phút
 app.config['SESSION_REFRESH_EACH_REQUEST'] = True
@@ -73,4 +77,9 @@ app.register_blueprint(expense_bp, url_prefix='/expense')  # Đăng ký expense 
 app.register_blueprint(report_soa_bp, url_prefix='/report-soa')  # Đăng ký report soa blueprint
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Chạy với cấu hình production-ready
+    debug_mode = os.environ.get('DEBUG', 'False').lower() == 'true'
+    port = int(os.environ.get('PORT', 5000))
+
+    
+    app.run(debug=debug_mode, host='0.0.0.0', port=port)

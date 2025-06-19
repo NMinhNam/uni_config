@@ -6,6 +6,7 @@
 !*.html
 !*.css
 !*.js
+!*.yaml
 
 # Cho phép các thư mục chứa tệp
 !app/
