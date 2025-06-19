@@ -75,41 +75,66 @@ class InvoiceModel:
         return options
 
     def _create_driver(self):
-        """Create Chrome driver with proper configuration"""
+        """Create Chrome driver - Production ready"""
         options = self._get_chrome_options()
-        
-        # Create temp directory for user data
         temp_dir = tempfile.mkdtemp()
         options.add_argument(f"--user-data-dir={temp_dir}")
         
         try:
-            if self._is_production():
-                # Production: Use system chromedriver
-                chromedriver_path = os.environ.get('CHROMEDRIVER_PATH', '/usr/bin/chromedriver')
-                if os.path.exists(chromedriver_path):
-                    service = webdriver.chrome.service.Service(chromedriver_path)
-                    print(f"✅ Using system chromedriver: {chromedriver_path}")
-                else:
-                    # Fallback to webdriver-manager
-                    from webdriver_manager.chrome import ChromeDriverManager
-                    service = webdriver.chrome.service.Service(ChromeDriverManager().install())
-                    print("✅ Using webdriver-manager")
-            else:
-                # Local development: Use webdriver-manager
-                from webdriver_manager.chrome import ChromeDriverManager
-                service = webdriver.chrome.service.Service(ChromeDriverManager().install())
-                print("✅ Using webdriver-manager for local development")
+            # ✅ STEP 1: Try system ChromeDriver first
+            system_paths = [
+                '/usr/bin/chromedriver',
+                '/usr/local/bin/chromedriver',
+                os.environ.get('CHROMEDRIVER_PATH', '')
+            ]
             
-            driver = webdriver.Chrome(service=service, options=options)
-            return driver, temp_dir
+            for path in system_paths:
+                if path and os.path.exists(path) and os.access(path, os.X_OK):
+                    service = webdriver.chrome.service.Service(path)
+                    driver = webdriver.Chrome(service=service, options=options)
+                    print(f"✅ Using system ChromeDriver: {path}")
+                    return driver, temp_dir
+            
+            # ✅ STEP 2: Try webdriver-manager
+            from webdriver_manager.chrome import ChromeDriverManager
+            
+            manager = ChromeDriverManager()
+            driver_path = manager.install()
+            
+            # ✅ STEP 3: Validate and find correct executable
+            if driver_path and 'chromedriver' in driver_path:
+                # Find actual chromedriver binary
+                search_dirs = [
+                    os.path.dirname(driver_path),
+                    os.path.join(os.path.dirname(driver_path), 'chromedriver-linux64'),
+                    os.path.join(os.path.dirname(driver_path), '..', 'chromedriver-linux64')
+                ]
+                
+                for search_dir in search_dirs:
+                    if os.path.exists(search_dir):
+                        chromedriver_path = os.path.join(search_dir, 'chromedriver')
+                        if os.path.exists(chromedriver_path) and os.access(chromedriver_path, os.X_OK):
+                            service = webdriver.chrome.service.Service(chromedriver_path)
+                            driver = webdriver.Chrome(service=service, options=options)
+                            print(f"✅ Using webdriver-manager ChromeDriver: {chromedriver_path}")
+                            return driver, temp_dir
+            
+            # ✅ STEP 4: Last resort - try downloaded path directly
+            if os.path.exists(driver_path):
+                service = webdriver.chrome.service.Service(driver_path)
+                driver = webdriver.Chrome(service=service, options=options)
+                print(f"✅ Using downloaded ChromeDriver: {driver_path}")
+                return driver, temp_dir
+            
+            raise Exception("Cannot find working ChromeDriver")
             
         except Exception as e:
-            # Clean up temp directory if driver creation fails
             try:
                 shutil.rmtree(temp_dir)
             except:
                 pass
-            raise e
+            print(f"❌ ChromeDriver error: {str(e)}")
+            raise Exception(f"ChromeDriver setup failed: {str(e)}")
 
     def initialize_driver(self):
         """Initialize Chrome driver"""
