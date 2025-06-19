@@ -12,6 +12,8 @@ import pandas as pd
 from bs4 import BeautifulSoup
 import base64
 import re
+import subprocess
+import platform
 from requests.exceptions import JSONDecodeError
 from config import Config
 import tempfile
@@ -37,6 +39,38 @@ class InvoiceModel:
             os.environ.get('RAILWAY_ENVIRONMENT') or
             os.environ.get('VERCEL')
         )
+
+    def _get_system_architecture(self):
+        """Detect system architecture"""
+        # Check if we're on a 64-bit system
+        is_64bits = platform.machine().endswith('64')
+        system = platform.system().lower()
+        
+        # On Linux, use more reliable methods
+        if system == 'linux':
+            try:
+                # Try using uname
+                arch = subprocess.check_output(['uname', '-m'], text=True).strip()
+                if arch in ['x86_64', 'amd64']:
+                    return 'x86_64'
+                elif arch in ['aarch64', 'arm64']:
+                    return 'arm64'
+                else:
+                    return arch
+            except:
+                pass
+        
+        # Fallbacks for other systems or if uname fails
+        if is_64bits:
+            if 'aarch' in platform.machine().lower() or 'arm' in platform.machine().lower():
+                return 'arm64'
+            else:
+                return 'x86_64'
+        else:
+            if 'arm' in platform.machine().lower():
+                return 'arm'
+            else:
+                return 'x86'
 
     def _get_chrome_options(self):
         """Get Chrome options for current environment"""
@@ -81,6 +115,10 @@ class InvoiceModel:
         options.add_argument(f"--user-data-dir={temp_dir}")
         
         try:
+            # Check system architecture
+            arch = self._get_system_architecture()
+            print(f"🖥️ Detected system architecture: {arch}")
+            
             # ✅ STEP 1: Try system ChromeDriver first
             system_paths = [
                 '/usr/bin/chromedriver',
@@ -95,13 +133,35 @@ class InvoiceModel:
                     print(f"✅ Using system ChromeDriver: {path}")
                     return driver, temp_dir
             
-            # ✅ STEP 2: Try webdriver-manager
+            # ✅ STEP 2: Try webdriver-manager with architecture handling
             from webdriver_manager.chrome import ChromeDriverManager
+            from selenium.webdriver.chrome.service import Service
             
-            manager = ChromeDriverManager()
-            driver_path = manager.install()
+            # On ARM systems (like AWS Graviton), specify the arm64 version
+            if arch in ['arm64', 'aarch64']:
+                print("🔍 ARM64 architecture detected, using specific ChromeDriver")
+                from webdriver_manager.core.os_manager import OperationSystemManager
+                os_manager = OperationSystemManager()
+                os_type = os_manager.get_os_type()
+                
+                # Force ARM64 chrome driver
+                os.environ['WDM_ARCHITECTURE'] = 'arm64'
+                os.environ['WDM_OS'] = 'linux'
+                if self._is_production():
+                    # Force ChromeDriver version to match Chrome if needed
+                    chrome_ver = os.environ.get('CHROME_VERSION', '114.0.5735.90')
+                    print(f"🔍 Production mode: forcing ChromeDriver v{chrome_ver}")
+                    driver_manager = ChromeDriverManager(version=chrome_ver)
+                else:
+                    driver_manager = ChromeDriverManager()
+            else:
+                # Regular x86_64 installation
+                driver_manager = ChromeDriverManager()
             
-            # ✅ STEP 3: Validate and find correct executable
+            driver_path = driver_manager.install()
+            print(f"📥 ChromeDriverManager path: {driver_path}")
+            
+            # ✅ STEP 3: Find executable with architecture awareness
             if driver_path and 'chromedriver' in driver_path:
                 # Find actual chromedriver binary
                 search_dirs = [
@@ -112,21 +172,39 @@ class InvoiceModel:
                 
                 for search_dir in search_dirs:
                     if os.path.exists(search_dir):
+                        print(f"🔍 Searching directory: {search_dir}")
                         chromedriver_path = os.path.join(search_dir, 'chromedriver')
-                        if os.path.exists(chromedriver_path) and os.access(chromedriver_path, os.X_OK):
-                            service = webdriver.chrome.service.Service(chromedriver_path)
-                            driver = webdriver.Chrome(service=service, options=options)
-                            print(f"✅ Using webdriver-manager ChromeDriver: {chromedriver_path}")
-                            return driver, temp_dir
+                        if os.path.exists(chromedriver_path):
+                            if os.access(chromedriver_path, os.X_OK):
+                                print(f"✅ Found executable ChromeDriver: {chromedriver_path}")
+                            else:
+                                print(f"🔧 Making ChromeDriver executable: {chromedriver_path}")
+                                os.chmod(chromedriver_path, 0o755)
+                            
+                            # Create service and driver
+                            try:
+                                service = Service(chromedriver_path)
+                                driver = webdriver.Chrome(service=service, options=options)
+                                print(f"✅ Using ChromeDriver: {chromedriver_path}")
+                                return driver, temp_dir
+                            except Exception as e:
+                                print(f"⚠️ Error with this driver: {str(e)}")
+                        else:
+                            print(f"❌ No chromedriver in {search_dir}")
             
             # ✅ STEP 4: Last resort - try downloaded path directly
-            if os.path.exists(driver_path):
-                service = webdriver.chrome.service.Service(driver_path)
+            if os.path.exists(driver_path) and ('chromedriver' in driver_path or driver_path.endswith('.exe')):
+                # Make sure it's executable
+                if not os.access(driver_path, os.X_OK):
+                    print(f"🔧 Making driver executable: {driver_path}")
+                    os.chmod(driver_path, 0o755)
+                
+                service = Service(driver_path)
                 driver = webdriver.Chrome(service=service, options=options)
                 print(f"✅ Using downloaded ChromeDriver: {driver_path}")
                 return driver, temp_dir
             
-            raise Exception("Cannot find working ChromeDriver")
+            raise Exception(f"Cannot find working ChromeDriver for {arch} architecture")
             
         except Exception as e:
             try:
