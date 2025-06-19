@@ -71,6 +71,7 @@ pycparser==2.21
 websocket-client==1.6.4
 
 # === ASYNC SUPPORT (if needed) ===
+# Note: pywin32/pythoncom is Windows-only and not needed in Linux containers
 # Note: win32com.client removed - Windows only, will fail on Linux deployment
 # Note: cryptography removed - causing build issues with newer versions
 # Note: pypdfium2 removed - heavy compilation, pdfplumber is sufficient

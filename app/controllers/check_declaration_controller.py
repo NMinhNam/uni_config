@@ -14,27 +14,16 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 # Tạo thư mục uploads nếu chưa tồn tại
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'uploads')
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+# Use exist_ok=True to avoid FileExistsError
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
 
-# Khởi tạo Flask với thư mục templates chính xác
-app = Flask(__name__, template_folder=TEMPLATE_DIR)
-app.config.from_object('config.Config')
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['SECRET_KEY'] = 'your-secret-key-here'
-app.config['SESSION_TYPE'] = 'filesystem'
-CORS(app, supports_credentials=True)
-
-declaration_model = DeclarationModel()
-
+# Khởi tạo Blueprint
 check_declaration_bp = Blueprint('check_declaration', __name__, url_prefix='/check-declaration')
 
-@app.route('/', methods=['GET'])
-def index():
-    return render_template('home.html')
+declaration_model = DeclarationModel()
 
 @check_declaration_bp.route('/')
 @check_declaration_bp.route('/check-declarations')
@@ -97,7 +86,7 @@ def check_declarations():
         if not excel_file.filename.endswith(('.xlsx', '.xls')):
             return jsonify({'error': 'File không đúng định dạng. Vui lòng chọn file Excel (.xlsx hoặc .xls)'}), 400
         
-        # Tạo thư mục uploads nếu chưa tồn tại
+        # Tạo thư mục uploads nếu chưa tồn tại - use exist_ok=True
         uploads_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'uploads')
         os.makedirs(uploads_dir, exist_ok=True)
         

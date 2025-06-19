@@ -11,7 +11,16 @@ import os
 import sys
 from config import Config
 from flask import session
-import pythoncom
+# Try to import pythoncom, but don't fail if it's not available (Windows-only module)
+try:
+    import pythoncom
+except ImportError:
+    # Define a dummy pythoncom module for Linux environments
+    class DummyPythonCOM:
+        def __getattr__(self, name):
+            return lambda *args, **kwargs: None
+    pythoncom = DummyPythonCOM()
+
 from app.models.report_soa import ReportSoa
 
 def resource_path(relative_path):
