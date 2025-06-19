@@ -37,7 +37,7 @@ python-dateutil==2.9.0.post0
 python-docx==0.8.11
 python-dotenv==1.0.0
 pytz==2025.2
-pywin32==310
+# pywin32==310  # ❌ Removed - Windows only, causes deployment issues on Linux
 requests==2.31.0
 selenium==4.25.0
 six==1.17.0
