@@ -1,55 +1,81 @@
-attrs==25.3.0
-beautifulsoup4==4.12.3
-blinker==1.9.0
-cachelib==0.13.0
-certifi==2025.4.26
-cffi==1.17.1
-charset-normalizer==3.4.2
-click==8.2.1
-colorama==0.4.6
-cryptography==45.0.3
-et_xmlfile==2.0.0
+# === CORE FLASK ===
 Flask==2.3.3
 Flask-Cors==4.0.0
 Flask-Session==0.5.0
-gunicorn==23.0.0
-h11==0.16.0
-idna==3.10
-itsdangerous==2.2.0
-Jinja2==3.1.6
-lxml==5.4.0
-MarkupSafe==3.0.2
-msal==1.32.3
-numpy==2.2.6
-Office365-REST-Python-Client==2.4.1
-openpyxl==3.1.5
-outcome==1.3.0.post0
-packaging==25.0
-pandas==2.2.2
-pdfminer.six==20221105
-pdfplumber==0.10.2
-pillow==10.4.0
-pycparser==2.22
-PyJWT==2.10.1
-pypdfium2==4.30.1
-PySocks==1.7.1
-python-dateutil==2.9.0.post0
-python-docx==0.8.11
-python-dotenv==1.0.0
-pytz==2025.2
-# pywin32==310  # ❌ Removed - Windows only, causes deployment issues on Linux
-requests==2.31.0
-selenium==4.25.0
-six==1.17.0
-sniffio==1.3.1
-sortedcontainers==2.4.0
-soupsieve==2.7
-trio==0.30.0
-trio-websocket==0.12.2
-typing_extensions==4.14.0
-tzdata==2025.2
-urllib3==2.4.0
-webdriver-manager==4.0.2
-websocket-client==1.8.0
 Werkzeug==2.3.7
-wsproto==1.2.0
+Jinja2==3.1.6
+MarkupSafe==3.0.2
+itsdangerous==2.2.0
+click==8.2.1
+blinker==1.9.0
+
+# === WSGI SERVER ===
+gunicorn==23.0.0
+
+# === BROWSER AUTOMATION (CRITICAL for invoice system) ===
+selenium==4.15.0
+webdriver-manager==4.0.1
+
+# === IMAGE PROCESSING (CRITICAL for CAPTCHA) ===
+Pillow==10.0.1
+
+# === DATA PROCESSING (CRITICAL for all data operations) ===
+pandas==2.0.3
+numpy==1.24.3
+
+# === EXCEL/OFFICE FILES (CRITICAL for file processing) ===
+openpyxl==3.1.2
+python-docx==0.8.11
+
+# === PDF PROCESSING ===
+pdfplumber==0.10.2
+pdfminer.six==20221105
+docx2pdf==0.1.8  # Cross-platform Word to PDF conversion
+
+# === SHAREPOINT INTEGRATION (CRITICAL for dashboard) ===
+Office365-REST-Python-Client==2.4.1
+msal==1.24.1
+
+# === WEB SCRAPING & HTTP ===
+requests==2.31.0
+beautifulsoup4==4.12.3
+urllib3==2.0.7
+
+# === AUTHENTICATION ===
+PyJWT==2.8.0
+
+# === SESSION & CACHE ===
+cachelib==0.13.0
+
+# === UTILITIES ===
+python-dateutil==2.8.2
+python-dotenv==1.0.0
+six==1.16.0
+pytz==2023.3
+
+# === SSL & CERTIFICATES (stable versions) ===
+certifi==2023.7.22
+
+# === STABLE DEPENDENCIES ===
+attrs==23.1.0
+charset-normalizer==3.3.2
+idna==3.4
+packaging==23.2
+lxml==4.9.3
+et_xmlfile==1.1.0
+sortedcontainers==2.4.0
+soupsieve==2.5
+typing_extensions==4.8.0
+cffi==1.16.0
+pycparser==2.21
+websocket-client==1.6.4
+
+# === ASYNC SUPPORT (if needed) ===
+# Note: win32com.client removed - Windows only, will fail on Linux deployment
+# Note: cryptography removed - causing build issues with newer versions
+# Note: pypdfium2 removed - heavy compilation, pdfplumber is sufficient
+# Note: selenium versions optimized for stability
+
+# ✅ Thêm packages cho OCR (nếu muốn dùng working code method)
+opencv-python==4.8.1.78
+pytesseract==0.3.10

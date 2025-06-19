@@ -16,6 +16,12 @@ class Config:
                 'declaration': 'Debit list'
             }
         },
+        'invoice_documents': {
+            'site_url': 'https://uniconsulting079.sharepoint.com/sites/ClearanceFlowAutomation',
+            'folders': {
+                'invoices_root': 'Invoice_Documents'
+            }
+        },
         'clearance': {
             'site_url': 'https://uniconsulting079.sharepoint.com/sites/Clearance',
             'lists': {

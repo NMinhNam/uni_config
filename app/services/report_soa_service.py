@@ -11,7 +11,6 @@ import os
 import sys
 from config import Config
 from flask import session
-import win32com.client
 import pythoncom
 from app.models.report_soa import ReportSoa
 
@@ -186,63 +185,32 @@ class ReportSoaService:
         return ""
 
     def create_word_file(self, data, company_name, company_info, from_date, to_date, save_dir, file_format='docx'):
-        # Tạo tên file tạm thời cho file Word
+        """Tạo file Word hoặc PDF dựa trên file_format"""
         temp_docx = None
         final_filename = None
         
         try:
+            # Tạo document Word
             doc = Document()
             
-            # Tạo header với logo và thông tin công ty
+            # Tạo nội dung document
             self._create_header(doc)
-            
-            # Tạo tiêu đề và thông tin chung
             self._create_title_section(doc, company_info, from_date, to_date)
-            
-            # Tạo bảng dữ liệu
             self._create_data_table(doc, data)
-            
-            # Tạo phần footer với thông tin thanh toán
             self._create_footer(doc)
             
             base_name = f"{company_name}_report"
             
-            if file_format == 'pdf':
-                # Tạo file Word tạm thời với tên ngẫu nhiên
-                import uuid
-                temp_id = str(uuid.uuid4())
-                temp_docx = os.path.join(save_dir, f"temp_{temp_id}.docx")
-                doc.save(temp_docx)
-                
-                try:
-                    # Initialize COM
-                    pythoncom.CoInitialize()
-                    
-                    # Chuyển đổi sang PDF
-                    final_filename = f"{base_name}.pdf"
-                    pdf_path = os.path.join(save_dir, final_filename)
-                    word = win32com.client.Dispatch('Word.Application')
-                    doc = word.Documents.Open(os.path.abspath(temp_docx))
-                    doc.SaveAs(os.path.abspath(pdf_path), FileFormat=17)  # 17 là định dạng PDF
-                    doc.Close()
-                    word.Quit()
-                    
-                finally:
-                    # Cleanup COM
-                    pythoncom.CoUninitialize()
-                    
-                    # Xóa file Word tạm thời
-                    if temp_docx and os.path.exists(temp_docx):
-                        try:
-                            os.remove(temp_docx)
-                        except Exception as e:
-                            print(f"Warning: Could not delete temporary file {temp_docx}: {str(e)}")
+            if file_format.lower() == 'pdf':
+                print("🔄 Tạo file PDF...")
+                return self._convert_to_pdf(doc, base_name, save_dir)
             else:
-                # Nếu người dùng yêu cầu file Word, lưu trực tiếp
+                print("📄 Tạo file Word...")
+                # Tạo file Word
                 final_filename = f"{base_name}.docx"
                 doc.save(os.path.join(save_dir, final_filename))
-            
-            return final_filename
+                print(f"✅ Đã tạo file Word: {final_filename}")
+                return final_filename
             
         except Exception as e:
             # Đảm bảo xóa file tạm nếu có lỗi
@@ -252,6 +220,147 @@ class ReportSoaService:
                 except:
                     pass
             raise Exception(f"Error creating document: {str(e)}")
+
+    def _convert_to_pdf(self, doc, base_name, save_dir):
+        """Convert Word document to PDF với multiple fallback options"""
+        import uuid
+        temp_id = str(uuid.uuid4())
+        temp_docx = os.path.join(save_dir, f"temp_{temp_id}.docx")
+        
+        try:
+            # Lưu file Word tạm thời
+            doc.save(temp_docx)
+            print(f"📄 Đã tạo file Word tạm: {temp_docx}")
+            
+            final_filename = f"{base_name}.pdf"
+            pdf_path = os.path.join(save_dir, final_filename)
+            
+            # Option 1: docx2pdf (works on Linux with LibreOffice)
+            success = self._try_docx2pdf_conversion(temp_docx, pdf_path)
+            
+            if not success:
+                # Option 2: pandoc (nếu có cài)
+                success = self._try_pandoc_conversion(temp_docx, pdf_path)
+            
+            if not success:
+                # Option 3: LibreOffice headless (nếu có cài)
+                success = self._try_libreoffice_conversion(temp_docx, pdf_path)
+            
+            if success:
+                print(f"✅ Đã chuyển đổi thành công sang PDF: {final_filename}")
+                return final_filename
+            else:
+                # Fallback: Trả về file Word nếu không convert được
+                print("⚠️ Không thể chuyển đổi sang PDF, trả về file Word")
+                fallback_filename = f"{base_name}.docx"
+                fallback_path = os.path.join(save_dir, fallback_filename)
+                
+                # Copy file tạm thành file cuối cùng
+                import shutil
+                shutil.copy2(temp_docx, fallback_path)
+                return fallback_filename
+                
+        except Exception as e:
+            print(f"❌ Lỗi khi chuyển đổi PDF: {str(e)}")
+            # Fallback: Trả về file Word
+            fallback_filename = f"{base_name}.docx"
+            fallback_path = os.path.join(save_dir, fallback_filename)
+            
+            try:
+                import shutil
+                shutil.copy2(temp_docx, fallback_path)
+                return fallback_filename
+            except:
+                raise Exception("Không thể tạo file")
+                
+        finally:
+            # Xóa file tạm
+            if temp_docx and os.path.exists(temp_docx):
+                try:
+                    os.remove(temp_docx)
+                    print(f"🗑️ Đã xóa file tạm: {temp_docx}")
+                except Exception as e:
+                    print(f"⚠️ Không thể xóa file tạm: {str(e)}")
+
+    def _try_docx2pdf_conversion(self, docx_path, pdf_path):
+        """Thử convert bằng docx2pdf"""
+        try:
+            from docx2pdf import convert # type: ignore
+            print("🔄 Đang thử docx2pdf conversion...")
+            convert(docx_path, pdf_path)
+            
+            if os.path.exists(pdf_path):
+                print("✅ docx2pdf conversion thành công!")
+                return True
+            return False
+            
+        except ImportError:
+            print("⚠️ docx2pdf không được cài đặt")
+            return False
+        except Exception as e:
+            print(f"❌ docx2pdf conversion thất bại: {str(e)}")
+            return False
+
+    def _try_pandoc_conversion(self, docx_path, pdf_path):
+        """Thử convert bằng pandoc"""
+        try:
+            import subprocess
+            print("🔄 Đang thử pandoc conversion...")
+            
+            result = subprocess.run([
+                'pandoc', docx_path, '-o', pdf_path,
+                '--pdf-engine=xelatex'
+            ], capture_output=True, text=True, timeout=60)
+            
+            if result.returncode == 0 and os.path.exists(pdf_path):
+                print("✅ pandoc conversion thành công!")
+                return True
+            else:
+                print(f"❌ pandoc conversion thất bại: {result.stderr}")
+                return False
+                
+        except FileNotFoundError:
+            print("⚠️ pandoc không được cài đặt")
+            return False
+        except Exception as e:
+            print(f"❌ pandoc conversion thất bại: {str(e)}")
+            return False
+
+    def _try_libreoffice_conversion(self, docx_path, pdf_path):
+        """Thử convert bằng LibreOffice headless"""
+        try:
+            import subprocess
+            print("🔄 Đang thử LibreOffice conversion...")
+            
+            # Get output directory
+            output_dir = os.path.dirname(pdf_path)
+            
+            result = subprocess.run([
+                'libreoffice', '--headless', '--convert-to', 'pdf',
+                '--outdir', output_dir, docx_path
+            ], capture_output=True, text=True, timeout=120)
+            
+            # LibreOffice tạo file với tên gốc
+            expected_pdf = os.path.join(output_dir, 
+                                     os.path.splitext(os.path.basename(docx_path))[0] + '.pdf')
+            
+            if os.path.exists(expected_pdf):
+                # Rename nếu cần
+                if expected_pdf != pdf_path:
+                    import shutil
+                    shutil.move(expected_pdf, pdf_path)
+                print("✅ LibreOffice conversion thành công!")
+                return True
+            else:
+                print(f"❌ LibreOffice conversion thất bại: {result.stderr}")
+                return False
+                
+        except FileNotFoundError:
+            print("⚠️ LibreOffice không được cài đặt")
+            return False
+        except Exception as e:
+            print(f"❌ LibreOffice conversion thất bại: {str(e)}")
+            return False
 
     def _create_header(self, doc):
         # Thiết lập độ rộng trang và margin
